@@ -1,0 +1,608 @@
+{
+  "name": "Email AI Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "custom",
+              "cronExpression": "*/5 * * * *"
+            }
+          ]
+        },
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -800,
+        432
+      ],
+      "id": "c6450a58-46b9-42f3-9c02-f89d2c696080",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "XfsH2FwrctmrYB9e",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputText": "=Subject: {{ $json.Subject }}\nEmail body: {{ $json.snippet }}",
+        "categories": {
+          "categories": [
+            {
+              "category": "Interesting",
+              "description": "Any email contains something potentially useful or valuable. Examples: business inquiry, collaboration request, project details, sales lead."
+            },
+            {
+              "category": "Support",
+              "description": "The email is asking for help, instructions, troubleshooting, or reporting a problem. Examples: “I need help…”, “Something is not working…”, “How can I do…?”"
+            },
+            {
+              "category": "Spam",
+              "description": "The email is unwanted, irrelevant, promotional, or suspicious. Examples: advertisements, mass mail, scam attempts."
+            },
+            {
+              "category": "General",
+              "description": "The email does not clearly fit into any of the above categories. Normal, neutral communication. Examples: casual updates, simple greetings, general info with no action needed."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textClassifier",
+      "typeVersion": 1,
+      "position": [
+        -384,
+        432
+      ],
+      "id": "5ea22cf8-bb9b-4f54-82c1-f8af0e127888",
+      "name": "Text Classifier",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -400,
+        752
+      ],
+      "id": "29091f57-ca99-439f-922a-7b3cd82f8f63",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "m3TsW67GBvvpElYe",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You're an intelligent bot at summarizing emails. Summarize all these emails bodies. Your output only include summarize email.The output format should only contain the email summary. Do not add a heading.",
+              "role": "system"
+            },
+            {
+              "content": "=Email body: {{ $('Gmail Trigger').item.json.snippet }}\n{{ $('Gmail Trigger').item.json.snippet }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        1072,
+        160
+      ],
+      "id": "27909a12-dcf8-4c4d-bebe-8dddde9e326c",
+      "name": "OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "m3TsW67GBvvpElYe",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $('Gmail Trigger').item.json.id }}",
+        "labelIds": [
+          "Label_4336051483229963810"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        416,
+        0
+      ],
+      "id": "4d0aed7d-62a9-4411-aaa5-e892efd9eca5",
+      "name": "Interesting",
+      "webhookId": "f546eda8-46ce-42e3-a0de-047ee73a9b33",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "XfsH2FwrctmrYB9e",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $('Gmail Trigger').item.json.id }}",
+        "labelIds": [
+          "Label_1144851644754737398"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        416,
+        160
+      ],
+      "id": "c251c3cb-ccfa-4186-89c0-c143edf3c4cd",
+      "name": "Support",
+      "webhookId": "f546eda8-46ce-42e3-a0de-047ee73a9b33",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "XfsH2FwrctmrYB9e",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $('Gmail Trigger').item.json.id }}",
+        "labelIds": [
+          "SPAM"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        416,
+        320
+      ],
+      "id": "fdf43c02-b3c1-4977-924b-34fdfc221e14",
+      "name": "Spam",
+      "webhookId": "f546eda8-46ce-42e3-a0de-047ee73a9b33",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "XfsH2FwrctmrYB9e",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $('Gmail Trigger').item.json.id }}",
+        "labelIds": [
+          "Label_6275372234106708343"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        416,
+        480
+      ],
+      "id": "cbd36d68-bcf5-42e6-8d68-9aae8976743b",
+      "name": "General",
+      "webhookId": "f546eda8-46ce-42e3-a0de-047ee73a9b33",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "XfsH2FwrctmrYB9e",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "8ebTvzF3pOaCrPpD",
+          "mode": "list",
+          "cachedResultName": "emails",
+          "cachedResultUrl": "/projects/PjgkR71dpvVXlH0i/datatables/8ebTvzF3pOaCrPpD"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "sender": "={{ $('Gmail Trigger').item.json.From }}",
+            "summary": "={{ $('OpenAI').item.json.message.content }}",
+            "category": "={{ $json.categoryName }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "sender",
+              "displayName": "sender",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "summary",
+              "displayName": "summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        1904,
+        160
+      ],
+      "id": "fb36523d-29f9-4f05-bc09-1da05437c555",
+      "name": "Insert row"
+    },
+    {
+      "parameters": {
+        "sendTo": "sueda@beaipowered.com",
+        "subject": "Email Received",
+        "message": "=New email received.  Sender: {{ $('Gmail Trigger').item.json.From }} \nCategory:{{ $('Code in JavaScript').item.json.categoryName }}  \nSummary: {{ $('OpenAI').item.json.message.content }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2256,
+        160
+      ],
+      "id": "97de9a1f-c659-4c91-ba48-4d83083dfe9e",
+      "name": "Send a message",
+      "webhookId": "a077e332-3f3a-456e-8e82-5212bdb4043f",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "XfsH2FwrctmrYB9e",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5115dc86-f941-4b7e-b0d1-72f481cec9c4",
+              "name": "Category",
+              "value": "Interesting",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        624,
+        0
+      ],
+      "id": "beed35f5-7929-4082-bd72-df3ce85ac386",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5115dc86-f941-4b7e-b0d1-72f481cec9c4",
+              "name": "Category",
+              "value": "Support",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        624,
+        160
+      ],
+      "id": "c4cad931-5abe-4ba8-ac65-549d1c8444ab",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5115dc86-f941-4b7e-b0d1-72f481cec9c4",
+              "name": "Category",
+              "value": "Spam",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        624,
+        320
+      ],
+      "id": "cb217ae7-093c-4be3-b424-fa0ca725f760",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5115dc86-f941-4b7e-b0d1-72f481cec9c4",
+              "name": "Category",
+              "value": "General",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        624,
+        496
+      ],
+      "id": "e7247988-aa04-49fe-ab38-ca11994d17a3",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {
+        "jsCode": "let categoryName = \"Uncategorized\";\n\nfunction getCategorySafe(nodeName) {\n    try {\n        const nodeData = $('' + nodeName).first()?.json?.Category;\n        return nodeData || null;\n    } catch (error) {\n        // Node çalışmamışsa null döndür\n        return null;\n    }\n}\n\n// Edit Fields node’larını sırayla kontrol et\nconst nodesToCheck = ['Edit Fields','Edit Fields1','Edit Fields2','Edit Fields3'];\n\nfor (const nodeName of nodesToCheck) {\n    const cat = getCategorySafe(nodeName);\n    if (cat) {\n        categoryName = cat;\n        break;\n    }\n}\n\n// JSON array olarak döndür\nreturn [\n    {\n        json: {\n            categoryName\n        }\n    }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1584,
+        160
+      ],
+      "id": "57555527-f99f-4b04-98de-7c3cfe6d0d6f",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Text Classifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Text Classifier",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text Classifier": {
+      "main": [
+        [
+          {
+            "node": "Interesting",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Support",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Spam",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "General",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [],
+        [],
+        []
+      ]
+    },
+    "OpenAI": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Interesting": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Support": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Spam": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "General": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert row": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Insert row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "0fc84a36-2a5d-4e82-8d13-d3dc5f484a99",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "96142dd86c8f8e55e0ba51bf20744b0ff704c8bfffbe34f0225d5bdabd1449bd"
+  },
+  "id": "2PNaN9IJoz618yi7",
+  "tags": []
+}
